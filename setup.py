@@ -3,6 +3,7 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+
 setuptools.setup(
     name="CITE-seq-Count",
     version="1.4.5",
@@ -22,10 +23,9 @@ setuptools.setup(
         "scipy>=1.1.0",
         "multiprocess>=0.70.6.1",
         "umi_tools==1.0.0",
-        "pytest==4.1.0",
-        "pytest-dependency==0.4.0",
         "pandas>=0.23.4",
         "pybktree==1.1",
     ],
+    tests_require=["pytest==4.1.0", "pytest-dependency==0.4.0"],
     python_requires=">=3.6",
 )
