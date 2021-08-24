@@ -342,7 +342,7 @@ Run parameters:
         )
 
 
-def main():
+def main(sysargs):
     # Create logger and stream handler
     logger = logging.getLogger("cite_seq_count")
     logger.setLevel(logging.CRITICAL)
@@ -356,12 +356,12 @@ def main():
 
     start_time = time.time()
     parser = get_args()
-    if not sys.argv[1:]:
+    if not sysargs:
         parser.print_help(file=sys.stderr)
         sys.exit(2)
 
     # Parse arguments.
-    args = parser.parse_args()
+    args = parser.parse_args(sysargs)
     if args.whitelist:
         print("Loading whitelist")
         (whitelist, args.bc_threshold) = preprocessing.parse_whitelist_csv(
@@ -660,4 +660,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:])
