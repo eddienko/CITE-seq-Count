@@ -364,7 +364,7 @@ def main(sysargs, logger=None):
     # Parse arguments.
     args = parser.parse_args(sysargs)
     if args.whitelist:
-        print("Loading whitelist")
+        logger.info("Loading whitelist")
         (whitelist, args.bc_threshold) = preprocessing.parse_whitelist_csv(
             filename=args.whitelist,
             barcode_length=args.cb_last - args.cb_first + 1,
@@ -416,7 +416,7 @@ def main(sysargs, logger=None):
 
     # Print a statement if multiple files are run.
     if number_of_samples != 1:
-        print("Detected {} files to run on.".format(number_of_samples))
+        logger.info("Detected {} files to run on.".format(number_of_samples))
 
     for read1_path, read2_path in zip(read1_paths, read2_paths):
         if args.first_n:
@@ -425,11 +425,11 @@ def main(sysargs, logger=None):
             n_lines = preprocessing.get_n_lines(read1_path)
         n_reads += int(n_lines / 4)
         n_threads = args.n_threads
-        print("Started mapping")
-        print("Processing {:,} reads".format(n_reads))
+        logger.info("Started mapping")
+        logger.info("Processing {:,} reads".format(n_reads))
         # Run with one process
         if n_threads <= 1 or n_reads < 1000001:
-            print("CITE-seq-Count is running with one core.")
+            logger.info("CITE-seq-Count is running with one core.")
             (_final_results, _merged_no_match) = processing.map_reads(
                 read1_path=read1_path,
                 read2_path=read2_path,
@@ -443,7 +443,7 @@ def main(sysargs, logger=None):
                 maximum_distance=args.max_error,
                 sliding_window=args.sliding_window,
             )
-            print("Mapping done")
+            logger.info("Mapping done")
             _umis_per_cell = Counter()
             _reads_per_cell = Counter()
             for cell_barcode, counts in _final_results.items():
@@ -453,7 +453,7 @@ def main(sysargs, logger=None):
                 )
         else:
             # Run with multiple processes
-            print("CITE-seq-Count is running with {} cores.".format(n_threads))
+            logger.info("CITE-seq-Count is running with {} cores.".format(n_threads))
             p = Pool(processes=n_threads)
             chunk_indexes = preprocessing.chunk_reads(n_reads, n_threads)
             parallel_results = []
@@ -479,8 +479,8 @@ def main(sysargs, logger=None):
                 )
             p.close()
             p.join()
-            print("Mapping done")
-            print("Merging results")
+            logger.info("Mapping done")
+            logger.info("Merging results")
 
             (
                 _final_results,
@@ -512,7 +512,7 @@ def main(sysargs, logger=None):
     # Correct cell barcodes
     if args.bc_threshold > 0:
         if len(umis_per_cell) <= args.expected_cells:
-            print(
+            logger.info(
                 "Number of expected cells, {}, is higher "
                 "than number of cells found {}.\nNot performing"
                 "cell barcode correction"
@@ -520,7 +520,7 @@ def main(sysargs, logger=None):
             )
             bcs_corrected = 0
         else:
-            print("Correcting cell barcodes")
+            logger.info("Correcting cell barcodes")
             if not whitelist:
                 (
                     final_results,
@@ -650,7 +650,7 @@ def main(sysargs, logger=None):
 
     # Write dense matrix to disk if requested
     if args.dense:
-        print("Writing dense format output")
+        logger.info("Writing dense format output")
         io.write_dense(
             sparse_matrix=umi_results_matrix,
             index=list(ordered_tags_map.keys()),
