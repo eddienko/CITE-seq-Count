@@ -342,23 +342,24 @@ Run parameters:
         )
 
 
-def main(sysargs):
-    # Create logger and stream handler
-    logger = logging.getLogger("cite_seq_count")
-    logger.setLevel(logging.CRITICAL)
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.CRITICAL)
-    formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
+def main(sysargs, logger=None):
+    if logger is None:
+        # Create logger and stream handler
+        logger = logging.getLogger("cite_seq_count")
+        logger.setLevel(logging.CRITICAL)
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.CRITICAL)
+        formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
+        ch.setFormatter(formatter)
+        logger.addHandler(ch)
 
     start_time = time.time()
     parser = get_args()
     if not sysargs:
         parser.print_help(file=sys.stderr)
-        sys.exit(2)
+        return
 
     # Parse arguments.
     args = parser.parse_args(sysargs)
