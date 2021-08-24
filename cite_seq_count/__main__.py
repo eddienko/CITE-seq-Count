@@ -2,26 +2,18 @@
 """
 Author: Patrick Roelli
 """
+import datetime
+import logging
+import os
 import sys
 import time
-import os
-import datetime
+from argparse import ArgumentParser, RawTextHelpFormatter
+from collections import Counter, OrderedDict, defaultdict
+
 import pkg_resources
-import logging
+from multiprocess import Pool, cpu_count
 
-from argparse import ArgumentParser
-from argparse import RawTextHelpFormatter
-from collections import OrderedDict
-from collections import Counter
-from collections import defaultdict
-
-from multiprocess import cpu_count
-from multiprocess import Pool
-
-from cite_seq_count import preprocessing
-from cite_seq_count import processing
-from cite_seq_count import io
-from cite_seq_count import secondsToText
+from cite_seq_count import io, preprocessing, processing, secondsToText
 
 version = pkg_resources.require("cite_seq_count")[0].version
 
