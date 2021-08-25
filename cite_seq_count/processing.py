@@ -1,25 +1,23 @@
-import time
 import gzip
-import sys
+import logging
 import os
-import Levenshtein
-import regex
-import pybktree
-
-from collections import Counter
-from collections import defaultdict
-from multiprocess import Pool
-
+import sys
+import time
+from collections import Counter, defaultdict
 from itertools import islice
+
+import Levenshtein
+import pybktree
+import regex
+import umi_tools.whitelist_methods as whitelist_methods
+from multiprocess import Pool
 from numpy import int32
 from scipy import sparse
-from umi_tools import network
-from umi_tools import umi_methods
-import umi_tools.whitelist_methods as whitelist_methods
+from umi_tools import network, umi_methods
 
+from cite_seq_count import preprocessing, secondsToText
 
-from cite_seq_count import secondsToText
-from cite_seq_count import preprocessing
+logger = logging.getLogger("owl.daemon.pipeline")
 
 
 def find_best_match(TAG_seq, tags, maximum_distance):
@@ -141,7 +139,7 @@ def map_reads(
 
             # Progress info
             if n % 1000000 == 0:
-                print(
+                logger.info(
                     "Processed 1,000,000 reads in {}. Total "
                     "reads: {:,} in child {}".format(
                         secondsToText.secondsToText(time.time() - t), n, os.getpid()
@@ -171,7 +169,7 @@ def map_reads(
                 no_match[TAG_seq] += 1
 
             if debug:
-                print(
+                logger.info(
                     "\nline:{0}\n"
                     "cell_barcode:{1}\tUMI:{2}\tTAG_seq:{3}\n"
                     "line length:{4}\tcell barcode length:{5}\tUMI length:{6}\tTAG sequence length:{7}\n"
@@ -189,7 +187,7 @@ def map_reads(
                 )
                 sys.stdout.flush()
             n += 1
-    print(
+    logger.info(
         "Mapping done for process {}. Processed {:,} reads".format(os.getpid(), n - 1)
     )
     sys.stdout.flush()
@@ -246,7 +244,7 @@ def correct_umis(final_results, collapsing_threshold, top_cells, max_umis):
         corrected_umis (int): How many umis have been corrected.
         aberrant_umi_count_cells (set): Set of uncorrected cells.
     """
-    print("Correcting umis")
+    logger.info("Correcting umis")
     corrected_umis = 0
     aberrant_umi_count_cells = set()
     for cell_barcode in top_cells:
@@ -307,7 +305,7 @@ def collapse_cells(true_to_false, umis_per_cell, final_results, ab_map):
         final_results (dict): Same as input but with corrected cell barcodes.
         corrected_barcodes (int): How many cell barcodes have been corrected.
     """
-    print("Collapsing cell barcodes")
+    logger.info("Collapsing cell barcodes")
     corrected_barcodes = 0
     for real_barcode in true_to_false:
         # If the cell barcode is not in the results
@@ -352,7 +350,7 @@ def correct_cells(
         umis_per_cell (Counter): Counter of umis per cell after cell barcode correction
         corrected_umis (int): How many umis have been corrected.
     """
-    print("Looking for a whitelist")
+    logger.info("Looking for a whitelist")
     cell_whitelist, true_to_false = whitelist_methods.getCellWhitelist(
         cell_barcode_counts=reads_per_cell,
         expect_cells=expected_cells,
@@ -390,11 +388,11 @@ def correct_cells_whitelist(
         corrected_barcodes (int): How many umis have been corrected.
     """
     barcode_tree = pybktree.BKTree(Levenshtein.hamming, whitelist)
-    print("Generated barcode tree from whitelist")
+    logger.info("Generated barcode tree from whitelist")
     cell_barcodes = list(final_results.keys())
     n_barcodes = len(cell_barcodes)
-    print("Finding reference candidates")
-    print("Processing {:,} cell barcodes".format(n_barcodes))
+    logger.info("Finding reference candidates")
+    logger.info("Processing {:,} cell barcodes".format(n_barcodes))
 
     # Run with one process
     true_to_false = find_true_to_false_map(

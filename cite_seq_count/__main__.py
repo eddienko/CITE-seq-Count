@@ -16,6 +16,7 @@ from multiprocess import Pool, cpu_count
 from cite_seq_count import io, preprocessing, processing, secondsToText
 
 version = pkg_resources.require("cite_seq_count")[0].version
+logger = logging.getLogger("owl.daemon.pipeline")
 
 
 def get_args():
@@ -342,19 +343,7 @@ Run parameters:
         )
 
 
-def main(sysargs, logger=None):
-    if logger is None:
-        # Create logger and stream handler
-        logger = logging.getLogger("cite_seq_count")
-        logger.setLevel(logging.CRITICAL)
-        ch = logging.StreamHandler()
-        ch.setLevel(logging.CRITICAL)
-        formatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        )
-        ch.setFormatter(formatter)
-        logger.addHandler(ch)
-
+def main(sysargs):
     start_time = time.time()
     parser = get_args()
     if not sysargs:

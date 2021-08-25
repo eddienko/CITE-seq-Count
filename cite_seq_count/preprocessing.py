@@ -1,13 +1,15 @@
 import csv
 import gzip
+import logging
 import sys
-import regex
-import Levenshtein
-
-from math import floor
 from collections import OrderedDict
-from itertools import combinations
-from itertools import islice
+from itertools import combinations, islice
+from math import floor
+
+import Levenshtein
+import regex
+
+logger = logging.getLogger("owl.daemon.pipeline")
 
 
 def get_indexes(start_index, chunk_size, nth):
@@ -105,7 +107,7 @@ def test_cell_distances(whitelist, collapsing_threshold):
     """
     ok = False
     while not ok:
-        print(
+        logger.info(
             "Testing cell barcode collapsing threshold of {}".format(
                 collapsing_threshold
             )
@@ -114,11 +116,13 @@ def test_cell_distances(whitelist, collapsing_threshold):
         for comb in all_comb:
             if Levenshtein.hamming(comb[0], comb[1]) <= collapsing_threshold:
                 collapsing_threshold -= 1
-                print("Value is too high, reducing it by 1")
+                logger.info("Value is too high, reducing it by 1")
                 break
         else:
             ok = True
-    print("Using {} for cell barcode collapsing threshold".format(collapsing_threshold))
+    logger.info(
+        "Using {} for cell barcode collapsing threshold".format(collapsing_threshold)
+    )
     return collapsing_threshold
 
 
@@ -181,7 +185,7 @@ def check_tags(tags, maximum_distance):
     DNA_pattern = regex.compile("^[ATGC]*$")
     for tag in tags:
         if not DNA_pattern.match(tag):
-            print(
+            logger.info(
                 "This tag {} is not only composed of ATGC bases.\nPlease check your tags file".format(
                     tag
                 )
@@ -189,14 +193,14 @@ def check_tags(tags, maximum_distance):
             sys.exit("Exiting the application.\n")
     # If offending pairs are found, print them all.
     if offending_pairs:
-        print(
+        logger.error(
             "[ERROR] Minimum Levenshtein distance of TAGs barcode is less "
             "than given threshold.\n"
             "Please use a smaller distance.\n\n"
             "Offending case(s):\n"
         )
         for pair in offending_pairs:
-            print(
+            logger.info(
                 "\t{tag1}\n\t{tag2}\n\tDistance = {distance}\n".format(
                     tag1=pair[0], tag2=pair[1], distance=pair[2]
                 )
@@ -259,7 +263,7 @@ def check_barcodes_lengths(read1_length, cb_first, cb_last, umi_first, umi_last)
             "Exiting the application.\n"
         )
     elif barcode_umi_length < read1_length:
-        print(
+        logger.warning(
             "[WARNING] Read1 length is {}bp but you are using {}bp for Cell "
             "and UMI barcodes combined.\nThis might lead to wrong cell "
             "attribution and skewed umi counts.\n".format(
@@ -301,7 +305,7 @@ def get_n_lines(file_path):
     Returns:
         n_lines (int): Number of lines in the file
     """
-    print("Counting number of reads")
+    logger.info("Counting number of reads")
     with gzip.open(file_path, "rt", encoding="utf-8", errors="ignore") as f:
         n_lines = sum(bl.count("\n") for bl in blocks(f))
     if n_lines % 4 != 0:
